@@ -1,0 +1,30 @@
+{
+  "name": "playwright_3-api-integration",
+  "version": "1.0.0",
+  "description": "Playwright test automation project — API integration",
+  "main": "index.js",
+  "private": true,
+  "scripts": {
+    "test": "playwright test",
+    "test:smoke": "cross-env TEST_SUITE=smoke playwright test --grep @smoke",
+    "test:e2e": "cross-env TEST_SUITE=e2e playwright test --grep @e2e",
+    "test:ui": "playwright test --ui",
+    "test:headed": "playwright test --headed",
+    "report": "playwright show-report",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@playwright/test": "^1.61.1",
+    "@types/node": "^26.1.1",
+    "cross-env": "^10.1.0",
+    "dotenv": "^17.4.2",
+    "eslint-plugin-playwright": "^2.10.5",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.64.0"
+  }
+}
