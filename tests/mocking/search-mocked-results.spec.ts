@@ -8,6 +8,7 @@ import { mockOnlyForMethod } from '@support/steps';
 test.describe('Network Interception / Mocking', () => {
   test('Mock GET /products/search to control search results and verify the result-count message', async ({
     page,
+    homePage,
   }) => {
     const mockedProducts = [
       {
@@ -82,13 +83,12 @@ test.describe('Network Interception / Mocking', () => {
 
     // 2. Navigate to the home page, type 'Pliers' into the 'Search' textbox, and click the 'Search' button
     await page.goto('/');
-    await page.getByRole('textbox', { name: 'Search' }).fill('Pliers');
-    await page.getByRole('button', { name: 'Search' }).click();
+    await homePage.search('Pliers');
 
-    await expect(page.getByRole('heading', { name: 'Searched for: Pliers', level: 3 })).toBeVisible();
+    await expect(homePage.getSearchResultsHeading('Pliers')).toBeVisible();
     // Matches the mocked count (2), not the real count (4) that this search term returns against live data.
-    await expect(page.getByText("2 products found for 'Pliers'")).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Mocked Combination Wrench', level: 5 })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Mocked Precision Screwdriver', level: 5 })).toBeVisible();
+    await expect(homePage.getResultsCountText("2 products found for 'Pliers'")).toBeVisible();
+    await expect(homePage.getProductCardHeading('Mocked Combination Wrench')).toBeVisible();
+    await expect(homePage.getProductCardHeading('Mocked Precision Screwdriver')).toBeVisible();
   });
 });

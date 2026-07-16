@@ -9,6 +9,7 @@ test.describe('Network Interception / Mocking', () => {
   test('Mock POST /users/login with a delayed response and verify a loading/disabled state on the Login button', async ({
     page,
     request,
+    loginPage,
   }) => {
     // A fabricated access_token fails the app's real follow-up GET /users/me call (confirmed live:
     // it returns 401 for a token that isn't a genuine JWT issued by this API), which bounces the app
@@ -38,10 +39,7 @@ test.describe('Network Interception / Mocking', () => {
 
     // 2. Navigate to the login page, fill 'Email address *' and 'Password *' with the demo credentials, and click 'Login'
     await page.goto('/auth/login');
-    await page.getByRole('textbox', { name: 'Email address *' }).fill('customer@practicesoftwaretesting.com');
-    await page.getByRole('textbox', { name: 'Password *' }).fill('welcome01');
-    const loginButton = page.getByRole('button', { name: 'Login' });
-    await loginButton.click();
+    await loginPage.login('customer@practicesoftwaretesting.com', 'welcome01');
 
     // Live exploration (delaying the real login request by several seconds and inspecting the DOM
     // immediately after the click) found no visible busy/disabled affordance on this button: it is a plain
@@ -50,7 +48,7 @@ test.describe('Network Interception / Mocking', () => {
     // UX, so the assertion below documents that reality (button remains usable/enabled) instead of asserting
     // a busy state that does not exist. The page also has not navigated away yet, confirming the mocked
     // delay is actually being honored before the click resolves.
-    await expect(loginButton).toBeEnabled();
+    await expect(loginPage.getLoginButton()).toBeEnabled();
     await expect(page).toHaveURL(/\/auth\/login$/);
 
     // Once the delayed mock response resolves, the app proceeds to '/account' as if a real login succeeded.

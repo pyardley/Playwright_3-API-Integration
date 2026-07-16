@@ -5,6 +5,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { test, expect } from '@fixtures/fixtures';
+import { FavoritesPage } from '@pages/FavoritesPage';
 
 test.describe('Bypassing the Login UI', () => {
   test('Independently reuses the same storageState to view Favorites (separate spec file B)', async ({
@@ -32,37 +33,37 @@ test.describe('Bypassing the Login UI', () => {
     await page.close();
 
     const context = await browser.newContext({ storageState: storageStatePath });
-    const favoritesPage = await context.newPage();
+    const sessionPage = await context.newPage();
+    const favoritesPage = new FavoritesPage(sessionPage);
 
     // 2. Navigate directly to 'https://practicesoftwaretesting.com/account/favorites'
-    const favoritesResponsePromise = favoritesPage.waitForResponse(
+    const favoritesResponsePromise = sessionPage.waitForResponse(
       (response) =>
         response.url() === 'https://api.practicesoftwaretesting.com/favorites' &&
         response.request().method() === 'GET',
     );
-    await favoritesPage.goto('https://practicesoftwaretesting.com/account/favorites');
-    await expect(favoritesPage).toHaveTitle(/^Favorites - Practice Software Testing - Toolshop/);
-    await expect(favoritesPage.getByRole('heading', { name: 'Favorites', level: 1 })).toBeVisible();
+    await sessionPage.goto('https://practicesoftwaretesting.com/account/favorites');
+    await expect(sessionPage).toHaveTitle(/^Favorites - Practice Software Testing - Toolshop/);
+    await expect(favoritesPage.getHeading()).toBeVisible();
     const favoritesResponse = await favoritesResponsePromise;
     expect(favoritesResponse.status()).toBe(200);
     const favorites = await favoritesResponse.json();
     expect(favorites.length).toBeGreaterThan(0);
     const targetFavorite = favorites[0];
-    await expect(favoritesPage.getByRole('heading', { name: targetFavorite.product.name })).toBeVisible();
+    await expect(favoritesPage.getFavoriteProductHeading(targetFavorite.product.name)).toBeVisible();
 
     // 3. Click the button on a favorite item that removes it from favorites (the small icon button next to each favorite entry)
     // The remove button exposes no accessible name, so it is located via the button's role scoped to its
     // uniquely-identified favorite card container (data-test="favorite-{id}").
-    const targetCard = favoritesPage.locator(`[data-test="favorite-${targetFavorite.id}"]`);
-    const deleteResponsePromise = favoritesPage.waitForResponse(
+    const deleteResponsePromise = sessionPage.waitForResponse(
       (response) =>
         response.url() === `https://api.practicesoftwaretesting.com/favorites/${targetFavorite.id}` &&
         response.request().method() === 'DELETE',
     );
-    await targetCard.getByRole('button').click();
+    await favoritesPage.getRemoveButton(targetFavorite.id).click();
     const deleteResponse = await deleteResponsePromise;
     expect(deleteResponse.status()).toBeLessThan(300);
-    await expect(favoritesPage.getByRole('heading', { name: targetFavorite.product.name })).toBeHidden();
+    await expect(favoritesPage.getFavoriteProductHeading(targetFavorite.product.name)).toBeHidden();
 
     // Cleanup: restore the removed favorite via the API so repeat runs keep seeing the same favorites list.
     const restoreResponse = await request.post('https://api.practicesoftwaretesting.com/favorites', {

@@ -8,6 +8,7 @@ test.describe('Playwright APIRequestContext for CRUD', () => {
   test('Seed a cart via API before visiting checkout, verify the UI reflects it, then delete the cart', async ({
     page,
     request,
+    checkoutPage,
   }) => {
     // 1. Send GET https://api.practicesoftwaretesting.com/products via APIRequestContext to obtain a real, current product id and its price
     const productsResponse = await request.get('https://api.practicesoftwaretesting.com/products');
@@ -51,9 +52,9 @@ test.describe('Playwright APIRequestContext for CRUD', () => {
     const cartGetResponse = await cartGetResponsePromise;
     expect(cartGetResponse.status()).toBe(200);
 
-    const productRow = page.getByRole('row', { name: new RegExp(product.name) });
+    const productRow = checkoutPage.getProductRow(product.name);
     await expect(productRow).toBeVisible();
-    await expect(productRow.getByRole('spinbutton', { name: `Quantity for ${product.name}` })).toHaveValue('2');
+    await expect(checkoutPage.getQuantityInput(product.name)).toHaveValue('2');
     const expectedTotal = (product.price * 2).toFixed(2);
     await expect(productRow).toContainText(`$${expectedTotal}`);
 

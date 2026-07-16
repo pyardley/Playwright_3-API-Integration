@@ -8,6 +8,7 @@ import { mockOnlyForMethod } from '@support/steps';
 test.describe('Network Interception / Mocking', () => {
   test("Mock GET /products to return an empty list and verify the home page's empty state", async ({
     page,
+    homePage,
   }) => {
     // 1. Before navigating, register a page.route interceptor for the pattern matching GET /products
     // (and its query string) that fulfills with status 200 and an empty product list.
@@ -50,12 +51,12 @@ test.describe('Network Interception / Mocking', () => {
     const productsResponse = await productsResponsePromise;
     expect(productsResponse.status()).toBe(200);
     // No product cards are rendered for the mocked empty list.
-    await expect(page.locator('[data-test^="product-"]')).toHaveCount(0);
+    await expect(homePage.getProductCards()).toHaveCount(0);
     // Confirmed live (via a real search with 0 matches, which renders the same shared empty-state message):
     // the app shows a "There are no products found." message instead of the product grid.
-    await expect(page.getByText('There are no products found.')).toBeVisible();
+    await expect(homePage.getEmptyStateText()).toBeVisible();
     // Confirmed live: pagination controls are not rendered at all when the product list is empty, so no
     // second page button exists - i.e. no more than 1 page is shown.
-    await expect(page.getByRole('button', { name: 'Page-2' })).toBeHidden();
+    await expect(homePage.getPaginationButton('Page-2')).toBeHidden();
   });
 });

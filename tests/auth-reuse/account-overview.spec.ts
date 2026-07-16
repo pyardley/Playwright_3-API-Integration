@@ -5,6 +5,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { test, expect } from '@fixtures/fixtures';
+import { AccountPage } from '@pages/AccountPage';
 
 test.describe('Bypassing the Login UI', () => {
   test('Land directly on the account overview page using storageState, never touching the login form (spec file A)', async ({
@@ -32,21 +33,22 @@ test.describe('Bypassing the Login UI', () => {
     // A brand new, independent context/page consuming only the storageState file on disk -
     // this is the actual "reuse storageState" under test, never touching /auth/login.
     const context = await browser.newContext({ storageState: storageStatePath });
-    const accountPage = await context.newPage();
+    const sessionPage = await context.newPage();
+    const accountPage = new AccountPage(sessionPage);
     const visitedUrls: string[] = [];
-    accountPage.on('framenavigated', (frame) => {
-      if (frame === accountPage.mainFrame()) visitedUrls.push(frame.url());
+    sessionPage.on('framenavigated', (frame) => {
+      if (frame === sessionPage.mainFrame()) visitedUrls.push(frame.url());
     });
 
     // 2. Navigate directly to 'https://practicesoftwaretesting.com/account'
-    await accountPage.goto('https://practicesoftwaretesting.com/account');
-    await expect(accountPage).toHaveTitle(/^Overview - Practice Software Testing - Toolshop/);
-    await expect(accountPage.getByRole('heading', { name: 'My account' })).toBeVisible();
-    await expect(accountPage.getByRole('button', { name: 'Favorites' })).toBeVisible();
-    await expect(accountPage.getByRole('button', { name: 'Profile' })).toBeVisible();
-    await expect(accountPage.getByRole('button', { name: 'Invoices' })).toBeVisible();
-    await expect(accountPage.getByRole('button', { name: 'Messages' })).toBeVisible();
-    await expect(accountPage.getByRole('menuitem', { name: 'Jane Doe' })).toBeVisible();
+    await sessionPage.goto('https://practicesoftwaretesting.com/account');
+    await expect(sessionPage).toHaveTitle(/^Overview - Practice Software Testing - Toolshop/);
+    await expect(accountPage.getHeading()).toBeVisible();
+    await expect(accountPage.getFavoritesButton()).toBeVisible();
+    await expect(accountPage.getProfileButton()).toBeVisible();
+    await expect(accountPage.getInvoicesButton()).toBeVisible();
+    await expect(accountPage.getMessagesButton()).toBeVisible();
+    await expect(accountPage.header.getAccountMenuItem('Jane Doe')).toBeVisible();
 
     // 3. Confirm no request to the login form/page ever occurred during this test by checking the browser's navigation history contains no '/auth/login' entry
     expect(visitedUrls.some((url) => url.includes('/auth/login'))).toBe(false);

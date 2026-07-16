@@ -9,6 +9,8 @@ test.describe('Playwright APIRequestContext for CRUD', () => {
   test('Complete a guest checkout end-to-end and verify the invoice API response shape', async ({
     page,
     request,
+    productPage,
+    checkoutPage,
   }) => {
     // 1. Using the UI, navigate to the home page, click the first product card, then click the 'Add to cart' button on its product detail page
     // Note: confirmed live that stock levels rotate over time and even an entire page of results
@@ -16,11 +18,11 @@ test.describe('Playwright APIRequestContext for CRUD', () => {
     // in-stock product is located via the API's own `in_stock` field, searching across pages
     // rather than assuming page 1 has one.
     const inStockProduct = await findInStockProduct(request);
-    await page.goto(`https://practicesoftwaretesting.com/product/${inStockProduct.id}`);
+    await productPage.gotoId(inStockProduct.id);
 
-    const productName = (await page.locator('[data-test="product-name"]').innerText()).trim();
-    await expect(page.getByRole('heading', { name: productName, level: 1 })).toBeVisible();
-    const productPrice = parseFloat(await page.locator('[data-test="unit-price"]').innerText());
+    const productName = (await productPage.getNameText().innerText()).trim();
+    await expect(productPage.getHeading(productName)).toBeVisible();
+    const productPrice = parseFloat(await productPage.getUnitPriceText().innerText());
 
     const createCartResponsePromise = page.waitForResponse(
       (response) =>
@@ -32,45 +34,42 @@ test.describe('Playwright APIRequestContext for CRUD', () => {
         /\/carts\/[a-z0-9]+$/.test(response.url()) &&
         response.request().method() === 'POST',
     );
-    await page.getByRole('button', { name: 'Add to cart' }).click();
+    await productPage.addToCart();
     const createCartResponse = await createCartResponsePromise;
     expect(createCartResponse.status()).toBe(201);
     const addItemResponse = await addItemResponsePromise;
     expect(addItemResponse.status()).toBe(200);
-    await expect(page.locator('[data-test="cart-quantity"]')).toHaveText('1');
+    await expect(productPage.header.getCartQuantityBadge()).toHaveText('1');
 
     // 2. Click the 'cart' link in the header to open '/checkout', then click 'Proceed to checkout' on the Cart step
-    await page.getByRole('link', { name: 'cart' }).click();
+    await productPage.header.goToCart();
     await expect(page).toHaveURL('https://practicesoftwaretesting.com/checkout');
-    await page.getByRole('button', { name: 'Proceed to checkout' }).click();
-    await expect(page.getByRole('tab', { name: 'Sign in' })).toBeVisible();
-    await expect(page.getByRole('tab', { name: 'Continue as Guest' })).toBeVisible();
+    await checkoutPage.clickProceed();
+    await expect(checkoutPage.getSignInTab()).toBeVisible();
+    await expect(checkoutPage.getGuestTab()).toBeVisible();
 
     // 3. Click the 'Continue as Guest' tab, fill 'Email address *', 'First name *', 'Last name *' with valid values, then click the 'Continue as Guest' button
-    await page.getByRole('tab', { name: 'Continue as Guest' }).click();
     const guestEmail = `guest.qa.${Date.now()}@example.com`;
     const guestFirstName = 'Guest';
     const guestLastName = 'Tester';
-    await page.getByRole('textbox', { name: 'Email address *' }).fill(guestEmail);
-    await page.getByRole('textbox', { name: 'First name *' }).fill(guestFirstName);
-    await page.getByRole('textbox', { name: 'Last name *' }).fill(guestLastName);
-    await page.getByRole('button', { name: 'Continue as Guest' }).click();
+    await checkoutPage.continueAsGuest(guestEmail, guestFirstName, guestLastName);
     await expect(
-      page.getByText(`Continuing as guest: ${guestFirstName} ${guestLastName} (${guestEmail})`),
+      checkoutPage.getGuestConfirmationText(
+        `Continuing as guest: ${guestFirstName} ${guestLastName} (${guestEmail})`,
+      ),
     ).toBeVisible();
-    const proceedToBillingButton = page.getByRole('button', { name: 'Proceed to checkout' });
-    await expect(proceedToBillingButton).toBeVisible();
+    await expect(checkoutPage.getProceedButton()).toBeVisible();
 
     // 4. Click 'Proceed to checkout', then on the Billing Address step select a Country (e.g. 'Austria'), fill 'Postal code' and 'House number' only, and wait for the auto-filled Street/City/State values from GET https://api.practicesoftwaretesting.com/postcode-lookup
-    await proceedToBillingButton.click();
-    await page.getByRole('combobox', { name: 'Country' }).selectOption('Austria');
+    await checkoutPage.clickProceed();
+    await checkoutPage.getCountrySelect().selectOption('Austria');
     const postcodeLookupResponsePromise = page.waitForResponse(
       (response) =>
         response.url().startsWith('https://api.practicesoftwaretesting.com/postcode-lookup') &&
         response.request().method() === 'GET',
     );
-    await page.getByRole('textbox', { name: 'Postal code' }).fill('1010');
-    await page.getByRole('textbox', { name: 'House number' }).fill('42');
+    await checkoutPage.getPostalCodeField().fill('1010');
+    await checkoutPage.getHouseNumberField().fill('42');
     const postcodeLookupResponse = await postcodeLookupResponsePromise;
     expect(postcodeLookupResponse.status()).toBe(200);
     const lookup = await postcodeLookupResponse.json();
@@ -78,28 +77,23 @@ test.describe('Playwright APIRequestContext for CRUD', () => {
     expect(lookup.city).not.toBe('');
     expect(lookup.state).not.toBe('');
 
-    const streetField = page.getByRole('textbox', { name: 'Street' });
-    const cityField = page.getByRole('textbox', { name: 'City' });
-    const stateField = page.getByRole('textbox', { name: 'State' });
-    await expect(streetField).toHaveValue(lookup.street);
-    await expect(cityField).toHaveValue(lookup.city);
-    await expect(stateField).toHaveValue(lookup.state);
-    const proceedToPaymentButton = page.getByRole('button', { name: 'Proceed to checkout' });
-    await expect(proceedToPaymentButton).toBeEnabled();
+    await expect(checkoutPage.getStreetField()).toHaveValue(lookup.street);
+    await expect(checkoutPage.getCityField()).toHaveValue(lookup.city);
+    await expect(checkoutPage.getStateField()).toHaveValue(lookup.state);
+    await expect(checkoutPage.getProceedButton()).toBeEnabled();
 
     // 5. Click 'Proceed to checkout', select 'Cash on Delivery' from the 'Payment Method' dropdown, and click 'Confirm'
-    await proceedToPaymentButton.click();
-    await page.getByRole('combobox', { name: 'Payment Method' }).selectOption('Cash on Delivery');
+    await checkoutPage.clickProceed();
+    await checkoutPage.selectPaymentMethod('Cash on Delivery');
     const paymentCheckResponsePromise = page.waitForResponse(
       (response) =>
         response.url() === 'https://api.practicesoftwaretesting.com/payment/check' &&
         response.request().method() === 'POST',
     );
-    const confirmButton = page.getByRole('button', { name: 'Confirm' });
-    await confirmButton.click();
+    await checkoutPage.clickConfirm();
     const paymentCheckResponse = await paymentCheckResponsePromise;
     expect(paymentCheckResponse.status()).toBe(200);
-    await expect(page.getByText('Payment was successful')).toBeVisible();
+    await expect(checkoutPage.getPaymentSuccessText()).toBeVisible();
 
     // 6. Click 'Confirm' a second time to finalize the order
     const invoiceResponsePromise = page.waitForResponse(
@@ -107,7 +101,7 @@ test.describe('Playwright APIRequestContext for CRUD', () => {
         response.url() === 'https://api.practicesoftwaretesting.com/invoices/guest' &&
         response.request().method() === 'POST',
     );
-    await confirmButton.click();
+    await checkoutPage.clickConfirm();
     const invoiceResponse = await invoiceResponsePromise;
     // Note: the live API returns 201 Created (not the 200 the plan's literal wording also allows for);
     // this assertion accepts either since both indicate the invoice was accepted, not rejected with 422.

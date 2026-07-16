@@ -1,4 +1,11 @@
 import { test as base, expect } from '@playwright/test';
+import { HomePage } from '@pages/HomePage';
+import { LoginPage } from '@pages/LoginPage';
+import { AccountPage } from '@pages/AccountPage';
+import { FavoritesPage } from '@pages/FavoritesPage';
+import { ProductPage } from '@pages/ProductPage';
+import { CheckoutPage } from '@pages/CheckoutPage';
+import { ContactPage } from '@pages/ContactPage';
 
 // Pattern for blocking ad domains in smoke runs (where real-site ads can
 // inject markup that breaks locators). Expand AD_DOMAIN_PATTERN to match
@@ -7,8 +14,13 @@ const AD_DOMAIN_PATTERN = /\.(doubleclick|googlesyndication|adnxs)\.com/;
 
 type Fixtures = {
   blockAdDomains: void;
-  // Add page objects here as they're created:
-  // homePage: HomePage;
+  homePage: HomePage;
+  loginPage: LoginPage;
+  accountPage: AccountPage;
+  favoritesPage: FavoritesPage;
+  productPage: ProductPage;
+  checkoutPage: CheckoutPage;
+  contactPage: ContactPage;
 };
 
 export const test = base.extend<Fixtures>({
@@ -21,7 +33,13 @@ export const test = base.extend<Fixtures>({
     },
     { auto: true },
   ],
-  // homePage: async ({ page }, use) => use(new HomePage(page)),
+  homePage: async ({ page }, use) => use(new HomePage(page)),
+  loginPage: async ({ page }, use) => use(new LoginPage(page)),
+  accountPage: async ({ page }, use) => use(new AccountPage(page)),
+  favoritesPage: async ({ page }, use) => use(new FavoritesPage(page)),
+  productPage: async ({ page }, use) => use(new ProductPage(page)),
+  checkoutPage: async ({ page }, use) => use(new CheckoutPage(page)),
+  contactPage: async ({ page }, use) => use(new ContactPage(page)),
 });
 
 export { expect };

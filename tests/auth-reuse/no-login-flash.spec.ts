@@ -5,6 +5,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { test, expect } from '@fixtures/fixtures';
+import { HomePage } from '@pages/HomePage';
+import { ProductPage } from '@pages/ProductPage';
 
 test.describe('Bypassing the Login UI', () => {
   test("Verify the header reflects the authenticated identity immediately after storageState is applied, with no flash of the logged-out 'Sign in' state", async ({
@@ -30,12 +32,14 @@ test.describe('Bypassing the Login UI', () => {
     await page.close();
 
     const context = await browser.newContext({ storageState: storageStatePath });
-    const homePage = await context.newPage();
+    const sessionPage = await context.newPage();
+    const homePage = new HomePage(sessionPage);
+    const productPage = new ProductPage(sessionPage);
 
     // Track every GET /users/me response from the moment storageState is applied so a transient
     // 401 (the "flash of logged-out state") would be caught even if the UI settles to the right state.
     const meResponseStatuses: number[] = [];
-    homePage.on('response', (response) => {
+    sessionPage.on('response', (response) => {
       if (
         response.url() === 'https://api.practicesoftwaretesting.com/users/me' &&
         response.request().method() === 'GET'
@@ -45,8 +49,8 @@ test.describe('Bypassing the Login UI', () => {
     });
 
     // 1. Using the shared storageState, navigate to 'https://practicesoftwaretesting.com/'
-    await homePage.goto('https://practicesoftwaretesting.com/');
-    await expect(homePage.getByRole('menuitem', { name: 'Jane Doe' })).toBeVisible();
+    await sessionPage.goto('https://practicesoftwaretesting.com/');
+    await expect(homePage.header.getAccountMenuItem('Jane Doe')).toBeVisible();
     expect(meResponseStatuses.length).toBeGreaterThan(0);
     expect(meResponseStatuses.every((status) => status === 200)).toBe(true);
 
@@ -57,9 +61,9 @@ test.describe('Bypassing the Login UI', () => {
     const { data: products } = await productsResponse.json();
     const firstProduct = products[0];
 
-    await homePage.goto(`https://practicesoftwaretesting.com/product/${firstProduct.id}`);
-    await expect(homePage.getByRole('heading', { name: firstProduct.name, level: 1 })).toBeVisible();
-    await expect(homePage.getByRole('menuitem', { name: 'Jane Doe' })).toBeVisible();
+    await productPage.gotoId(firstProduct.id);
+    await expect(productPage.getHeading(firstProduct.name)).toBeVisible();
+    await expect(productPage.header.getAccountMenuItem('Jane Doe')).toBeVisible();
 
     await context.close();
     fs.rmSync(storageStatePath, { force: true });

@@ -10,6 +10,7 @@ test.describe('Global Setup & Teardown', () => {
   test('Global setup authenticates via API and persists a working logged-in storageState', async ({
     page,
     request,
+    accountPage,
   }) => {
     const storageStatePath = path.join(
       'test-results',
@@ -39,7 +40,7 @@ test.describe('Global Setup & Teardown', () => {
 
     // 4. Reload the page (or navigate to '/account')
     await page.goto('https://practicesoftwaretesting.com/account');
-    await expect(page.getByRole('menuitem', { name: 'Jane Doe' })).toBeVisible();
+    await expect(accountPage.header.getAccountMenuItem('Jane Doe')).toBeVisible();
     const meResponse = await request.get('https://api.practicesoftwaretesting.com/users/me', {
       headers: { Authorization: `Bearer ${accessToken}` },
     });

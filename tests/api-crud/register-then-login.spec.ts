@@ -8,6 +8,8 @@ test.describe('Playwright APIRequestContext for CRUD', () => {
   test('Register a new user via API, then verify login works through the UI with those credentials', async ({
     page,
     request,
+    loginPage,
+    accountPage,
   }) => {
     // 1. Build a unique UserRequest payload (first_name, last_name, address {street, city, state, country, postal_code}, phone, dob '1990-01-01', password meeting the site's strength rules e.g. 'Str0ng!Passw0rd', and a unique email such as `qa.test.<timestamp>@example.com`)
     const uniqueId = Date.now();
@@ -44,11 +46,9 @@ test.describe('Playwright APIRequestContext for CRUD', () => {
 
     // 3. Navigate to 'https://practicesoftwaretesting.com/auth/login' in the UI (no storageState applied for this test)
     await page.goto('https://practicesoftwaretesting.com/auth/login');
-    await expect(page.getByRole('heading', { name: 'Login' })).toBeVisible();
+    await expect(loginPage.getHeading()).toBeVisible();
 
     // 4. Enter the newly registered email into the 'Email address *' textbox and the chosen password into the 'Password *' textbox, then click the 'Login' button
-    await page.getByLabel('Email address *').fill(email);
-    await page.getByLabel('Password *').fill(password);
     // A successful login triggers a hard page reload on this app (confirmed live: the JS
     // execution context is destroyed and several in-flight GET /users/me calls are aborted),
     // so the predicate only accepts the call that actually settles with a 200, rather than
@@ -59,9 +59,9 @@ test.describe('Playwright APIRequestContext for CRUD', () => {
         response.request().method() === 'GET' &&
         response.ok(),
     );
-    await page.getByRole('button', { name: 'Login' }).click();
+    await loginPage.login(email, password);
     await expect(page).toHaveURL('https://practicesoftwaretesting.com/account');
-    await expect(page.getByRole('menuitem', { name: `${firstName} ${lastName}` })).toBeVisible();
+    await expect(accountPage.header.getAccountMenuItem(`${firstName} ${lastName}`)).toBeVisible();
     const meResponse = await meResponsePromise;
     expect(meResponse.status()).toBe(200);
     const me = await meResponse.json();

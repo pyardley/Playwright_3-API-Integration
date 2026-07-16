@@ -8,6 +8,7 @@ import { mockOnlyForMethod } from '@support/steps';
 test.describe('Network Interception / Mocking', () => {
   test('Mock GET /carts/{cartId} to return a malformed/empty cart and verify checkout does not crash', async ({
     page,
+    checkoutPage,
   }) => {
     const pageErrors: Error[] = [];
     page.on('pageerror', (error) => pageErrors.push(error));
@@ -40,14 +41,14 @@ test.describe('Network Interception / Mocking', () => {
     // errors are also observed transiently in the genuine, well-behaved case (before the async cart data
     // resolves), so their mere presence isn't itself a reliable crash signal - what matters is whether the
     // page ultimately settles into a real empty-cart UI (checked below) instead of staying blank forever.
-    await expect(page.getByText('The cart is empty. Nothing to display.')).toBeVisible();
+    await expect(checkoutPage.getEmptyCartText()).toBeVisible();
 
     // Note: live exploration of the genuine empty-cart state (a real cart with 0 items) showed the app does
     // NOT render 'Continue Shopping' / 'Proceed to checkout' buttons when the cart is empty - only the
     // wizard steps and the empty-cart message are shown. The plan's expectation of visible buttons here does
     // not match that reality, so this assertion is adjusted to reflect the actual, observed behavior.
-    await expect(page.getByRole('button', { name: 'Proceed to checkout' })).toBeHidden();
-    await expect(page.getByRole('button', { name: 'Continue Shopping' })).toBeHidden();
+    await expect(checkoutPage.getProceedButton()).toBeHidden();
+    await expect(checkoutPage.getContinueShoppingButton()).toBeHidden();
 
     expect(pageErrors, 'No unhandled exception/crash should occur despite the malformed cart mock').toEqual([]);
   });

@@ -6,7 +6,10 @@ import { test, expect } from '@fixtures/fixtures';
 import { mockOnlyForMethod, collectConsoleErrors } from '@support/steps';
 
 test.describe('Network Interception / Mocking', () => {
-  test('Mock GET /products to return a 500 error and verify an error state is shown', async ({ page }) => {
+  test('Mock GET /products to return a 500 error and verify an error state is shown', async ({
+    page,
+    homePage,
+  }) => {
     const consoleErrors = collectConsoleErrors(page);
 
     // 1. Register a page.route interceptor for '**/products*' that fulfills with status 500 and a JSON body
@@ -32,11 +35,11 @@ test.describe('Network Interception / Mocking', () => {
       .poll(() => consoleErrors.some((text) => /Failed to load resource.*500/.test(text)))
       .toBe(true);
     // The product grid does not display any product cards, since no real data was returned.
-    await expect(page.locator('[data-test^="product-"]')).toHaveCount(0);
+    await expect(homePage.getProductCards()).toHaveCount(0);
 
     // The rest of the page (header, sidebar filters, footer) still renders without crashing.
-    await expect(page.getByRole('menubar', { name: 'Main menu' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Filters', level: 4 })).toBeVisible();
-    await expect(page.getByText('This is a DEMO application')).toBeVisible();
+    await expect(homePage.header.getMainMenu()).toBeVisible();
+    await expect(homePage.getFiltersHeading()).toBeVisible();
+    await expect(homePage.getFooterText()).toBeVisible();
   });
 });

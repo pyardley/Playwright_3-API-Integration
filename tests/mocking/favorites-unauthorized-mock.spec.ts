@@ -6,6 +6,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { test, expect } from '@fixtures/fixtures';
 import { mockOnlyForMethod } from '@support/steps';
+import { FavoritesPage } from '@pages/FavoritesPage';
 
 test.describe('Network Interception / Mocking', () => {
   test('Mock GET /favorites to return 401 while the UI expects an authenticated user, verify graceful handling', async ({
@@ -32,9 +33,10 @@ test.describe('Network Interception / Mocking', () => {
     await page.close();
 
     const context = await browser.newContext({ storageState: storageStatePath });
-    const favoritesPage = await context.newPage();
+    const sessionPage = await context.newPage();
+    const favoritesPage = new FavoritesPage(sessionPage);
     const pageErrors: Error[] = [];
-    favoritesPage.on('pageerror', (error) => pageErrors.push(error));
+    sessionPage.on('pageerror', (error) => pageErrors.push(error));
 
     // 1. Using the authenticated storageState, register a page.route interceptor for '**/favorites' that
     // fulfills with status 401, overriding the real (otherwise-200) response.
@@ -42,7 +44,7 @@ test.describe('Network Interception / Mocking', () => {
     // navigation to https://practicesoftwaretesting.com/account/favorites (which also ends in
     // "favorites"), hijacking the document load itself instead of just the backend API call. The
     // pattern is scoped to the API origin so only the intended XHR/fetch request is intercepted.
-    await favoritesPage.route(
+    await sessionPage.route(
       'https://api.practicesoftwaretesting.com/favorites',
       mockOnlyForMethod('GET', async (route) => {
         await route.fulfill({
@@ -54,24 +56,24 @@ test.describe('Network Interception / Mocking', () => {
     );
 
     // 2. Navigate to 'https://practicesoftwaretesting.com/account/favorites'
-    const favoritesResponsePromise = favoritesPage.waitForResponse(
+    const favoritesResponsePromise = sessionPage.waitForResponse(
       (response) =>
         response.url() === 'https://api.practicesoftwaretesting.com/favorites' &&
         response.request().method() === 'GET',
     );
-    await favoritesPage.goto('https://practicesoftwaretesting.com/account/favorites');
+    await sessionPage.goto('https://practicesoftwaretesting.com/account/favorites');
     const favoritesResponse = await favoritesResponsePromise;
     expect(favoritesResponse.status()).toBe(401);
 
     // No favorite product cards are displayed for the mocked-unauthorized response.
-    await expect(favoritesPage.locator('[data-test^="favorite-"]')).toHaveCount(0);
+    await expect(favoritesPage.getFavoriteCards()).toHaveCount(0);
 
     // Confirmed live: the app's global auth handling treats any 401 - even one that is only mocked on this
     // single endpoint, with an otherwise-valid stored token - as "logged out" and redirects away to the
     // login page, clearing the authenticated header state. This is a graceful fallback (a redirect) rather
     // than an unhandled crash, even though the user's stored token is otherwise valid.
-    await expect(favoritesPage).toHaveURL(/\/auth\/login$/);
-    await expect(favoritesPage.getByRole('menuitem', { name: 'Sign in' })).toBeVisible();
+    await expect(sessionPage).toHaveURL(/\/auth\/login$/);
+    await expect(favoritesPage.header.getSignInMenuItem()).toBeVisible();
     expect(pageErrors, 'No unhandled exception/crash should occur from the mocked 401').toEqual([]);
 
     await context.close();

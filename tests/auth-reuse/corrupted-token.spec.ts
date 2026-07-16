@@ -5,6 +5,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { test, expect } from '@fixtures/fixtures';
+import { AccountPage } from '@pages/AccountPage';
 
 test.describe('Bypassing the Login UI', () => {
   test('Negative: a storageState with a corrupted/expired auth-token value is treated as logged out', async ({
@@ -50,20 +51,21 @@ test.describe('Bypassing the Login UI', () => {
 
     // 2. Launch a new context using this corrupted storageState and navigate to 'https://practicesoftwaretesting.com/account'
     const context = await browser.newContext({ storageState: corruptedStorageStatePath });
-    const accountPage = await context.newPage();
+    const sessionPage = await context.newPage();
+    const accountPage = new AccountPage(sessionPage);
     const pageErrors: Error[] = [];
-    accountPage.on('pageerror', (error) => pageErrors.push(error));
+    sessionPage.on('pageerror', (error) => pageErrors.push(error));
 
-    const meResponsePromise = accountPage.waitForResponse(
+    const meResponsePromise = sessionPage.waitForResponse(
       (response) =>
         response.url() === 'https://api.practicesoftwaretesting.com/users/me' &&
         response.request().method() === 'GET',
     );
-    await accountPage.goto('https://practicesoftwaretesting.com/account');
+    await sessionPage.goto('https://practicesoftwaretesting.com/account');
     const meResponse = await meResponsePromise;
     expect(meResponse.status()).toBe(401);
-    await expect(accountPage.getByRole('menuitem', { name: 'Sign in' })).toBeVisible();
-    await expect(accountPage.getByRole('menuitem', { name: 'Jane Doe' })).toBeHidden();
+    await expect(accountPage.header.getSignInMenuItem()).toBeVisible();
+    await expect(accountPage.header.getAccountMenuItem('Jane Doe')).toBeHidden();
     expect(pageErrors, 'No unhandled exception/crash should occur despite the malformed token').toEqual([]);
 
     await context.close();
