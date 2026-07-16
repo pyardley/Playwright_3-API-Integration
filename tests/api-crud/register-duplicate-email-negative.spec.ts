@@ -1,5 +1,6 @@
 // spec: specs/api-integration-session-storage.plan.md
 // seed: tests/seed.spec.ts
+// test case: 3.5. Negative: registering with an already-used email returns 409 Conflict
 
 import { test, expect } from '@fixtures/fixtures';
 

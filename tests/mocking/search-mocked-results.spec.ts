@@ -1,5 +1,6 @@
 // spec: specs/api-integration-session-storage.plan.md
 // seed: tests/seed.spec.ts
+// test case: 4.3. Mock GET /products/search to control search results and verify the result-count message
 
 import { test, expect } from '@fixtures/fixtures';
 import { mockOnlyForMethod } from '@support/steps';

@@ -1,5 +1,6 @@
 // spec: specs/api-integration-session-storage.plan.md
 // seed: tests/seed.spec.ts
+// test case: 1.2. Global setup surfaces a clear failure when API login credentials are invalid
 
 import fs from 'node:fs';
 import path from 'node:path';

@@ -1,5 +1,6 @@
 // spec: specs/api-integration-session-storage.plan.md
 // seed: tests/seed.spec.ts
+// test case: 2.4. Negative: a storageState with a corrupted/expired auth-token value is treated as logged out
 
 import fs from 'node:fs';
 import path from 'node:path';

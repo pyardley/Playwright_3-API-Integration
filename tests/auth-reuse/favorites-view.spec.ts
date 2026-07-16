@@ -1,5 +1,6 @@
 // spec: specs/api-integration-session-storage.plan.md
 // seed: tests/seed.spec.ts
+// test case: 2.2. Test file B (separate spec file): independently reuses the same storageState to view Favorites
 
 import fs from 'node:fs';
 import path from 'node:path';

@@ -1,5 +1,6 @@
 // spec: specs/api-integration-session-storage.plan.md
 // seed: tests/seed.spec.ts
+// test case: 4.4. Mock POST /users/login with a delayed response and verify a loading/disabled state on the Login button
 
 import { test, expect } from '@fixtures/fixtures';
 import { mockOnlyForMethod } from '@support/steps';

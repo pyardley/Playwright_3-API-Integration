@@ -1,5 +1,6 @@
 // spec: specs/api-integration-session-storage.plan.md
 // seed: tests/seed.spec.ts
+// test case: 2.1. Test file A: land directly on the account overview page using storageState, never touching the login form
 
 import fs from 'node:fs';
 import path from 'node:path';

@@ -1,5 +1,6 @@
 // spec: specs/api-integration-session-storage.plan.md
 // seed: tests/seed.spec.ts
+// test case: 2.3. Verify the header reflects the authenticated identity immediately after storageState is applied, with no flash of the logged-out 'Sign in' state
 
 import fs from 'node:fs';
 import path from 'node:path';

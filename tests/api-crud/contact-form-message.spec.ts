@@ -1,5 +1,6 @@
 // spec: specs/api-integration-session-storage.plan.md
 // seed: tests/seed.spec.ts
+// test case: 3.6. Submit the contact form and verify the underlying /messages API call and response shape
 
 import { test, expect } from '@fixtures/fixtures';
 

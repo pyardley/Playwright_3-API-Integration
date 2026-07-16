@@ -1,5 +1,6 @@
 // spec: specs/api-integration-session-storage.plan.md
 // seed: tests/seed.spec.ts
+// test case: 4.6. Mock GET /favorites to return 401 while the UI expects an authenticated user, verify graceful handling
 
 import fs from 'node:fs';
 import path from 'node:path';

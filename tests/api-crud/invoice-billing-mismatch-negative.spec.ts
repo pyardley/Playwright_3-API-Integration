@@ -1,5 +1,6 @@
 // spec: specs/api-integration-session-storage.plan.md
 // seed: tests/seed.spec.ts
+// test case: 3.4. Negative: guest checkout invoice submission fails with 422 when billing city/country are inconsistent
 
 import { test, expect } from '@fixtures/fixtures';
 import { findInStockProduct } from '@support/steps';

@@ -1,5 +1,6 @@
 // spec: specs/api-integration-session-storage.plan.md
 // seed: tests/seed.spec.ts
+// test case: 3.3. Complete a guest checkout end-to-end and verify the invoice API response shape
 
 import { test, expect } from '@fixtures/fixtures';
 import { findInStockProduct } from '@support/steps';

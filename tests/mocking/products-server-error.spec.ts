@@ -1,5 +1,6 @@
 // spec: specs/api-integration-session-storage.plan.md
 // seed: tests/seed.spec.ts
+// test case: 4.2. Mock GET /products to return a 500 error and verify an error state is shown
 
 import { test, expect } from '@fixtures/fixtures';
 import { mockOnlyForMethod, collectConsoleErrors } from '@support/steps';

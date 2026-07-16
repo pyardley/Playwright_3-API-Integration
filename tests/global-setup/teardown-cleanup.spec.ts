@@ -1,5 +1,6 @@
 // spec: specs/api-integration-session-storage.plan.md
 // seed: tests/seed.spec.ts
+// test case: 1.3. Global teardown cleans up the storageState artifact and any setup-created data
 
 import fs from 'node:fs';
 import path from 'node:path';

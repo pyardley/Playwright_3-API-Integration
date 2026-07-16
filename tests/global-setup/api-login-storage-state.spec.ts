@@ -1,5 +1,6 @@
 // spec: specs/api-integration-session-storage.plan.md
 // seed: tests/seed.spec.ts
+// test case: 1.1. Global setup authenticates via API and persists a working logged-in storageState
 
 import fs from 'node:fs';
 import path from 'node:path';

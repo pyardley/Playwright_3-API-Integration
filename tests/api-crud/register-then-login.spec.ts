@@ -1,5 +1,6 @@
 // spec: specs/api-integration-session-storage.plan.md
 // seed: tests/seed.spec.ts
+// test case: 3.1. Register a new user via API, then verify login works through the UI with those credentials
 
 import { test, expect } from '@fixtures/fixtures';
 

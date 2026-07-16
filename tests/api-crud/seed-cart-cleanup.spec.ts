@@ -1,5 +1,6 @@
 // spec: specs/api-integration-session-storage.plan.md
 // seed: tests/seed.spec.ts
+// test case: 3.2. Seed a cart via API before visiting checkout, verify the UI reflects it, then delete the cart
 
 import { test, expect } from '@fixtures/fixtures';
 

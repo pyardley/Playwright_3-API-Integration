@@ -1,5 +1,6 @@
 // spec: specs/api-integration-session-storage.plan.md
 // seed: tests/seed.spec.ts
+// test case: 4.5. Mock GET /carts/{cartId} to return a malformed/empty cart and verify checkout does not crash
 
 import { test, expect } from '@fixtures/fixtures';
 import { mockOnlyForMethod } from '@support/steps';

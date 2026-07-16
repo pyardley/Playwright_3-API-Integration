@@ -1,5 +1,6 @@
 // spec: specs/api-integration-session-storage.plan.md
 // seed: tests/seed.spec.ts
+// test case: 4.1. Mock GET /products to return an empty list and verify the home page's empty state
 
 import { test, expect } from '@fixtures/fixtures';
 import { mockOnlyForMethod } from '@support/steps';
