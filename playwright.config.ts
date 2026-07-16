@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 import { config } from 'dotenv';
 
-config();
+config({ override: true });
 
 export default defineConfig({
   testDir: './tests',
